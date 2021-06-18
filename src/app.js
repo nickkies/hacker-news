@@ -4,6 +4,7 @@ const NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json';
 const store = {
 	currentPage: 1,
+	feeds: [],
 };
 
 function getData(url) {
@@ -13,8 +14,17 @@ function getData(url) {
 	return JSON.parse(ajax.response);
 }
 
+function makeFeed(feeds) {
+
+	feeds.forEach(feed => {
+		feed.read = false;
+	});
+
+	return feeds;
+}
+
 function newsFeed() {
-	const newsFeed = getData(NEWS_URL);
+	let newsFeed = store.feeds;
 	const newsList = [];
 	let template = `
 		<div class="bg-gray-600 min-h-screen">
@@ -40,6 +50,10 @@ function newsFeed() {
       </div>
     </div>
 	`;
+
+	if ( newsFeed.length === 0 ) {
+		newsFeed = store.feeds = makeFeed(getData(NEWS_URL));
+	}
 
 	for ( let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++ ) {
 		const news = newsFeed[i];
@@ -108,6 +122,13 @@ function newsDetail() {
     </div>
   `;
 
+	for ( const feed of store.feeds ) {
+		if ( feed.id === Number(id) ) {
+			feed.read = true;
+			break;
+		}
+	}
+
 	function makeComment(comments, called = 0) {
 		const commentStr = [];
 
@@ -130,8 +151,8 @@ function newsDetail() {
 		return commentStr.join('');
 	}
 
+	window.scroll(0,0);
 	container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
-
 
 }
 
