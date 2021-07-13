@@ -3,15 +3,28 @@ type Store = {
 	feeds: NewsFeed[];
 }
 
-type NewsFeed = {
+type News = {
 	id: number;
-	comments_count: number;
+	time_ago: string;
+	title: string;
 	url: string;
 	user: string;
-	time_ago: string;
+	content: string
+}
+
+type NewsFeed = News & {
+	comments_count: number;
 	points: number;
-	title: string;
 	read?: boolean;
+}
+
+type NewsDetail = News & {
+	comments: NewsComment[];
+}
+
+type NewsComment = News & {
+	comments: NewsComment[];
+	level: number;
 }
 
 const container: HTMLElement | null = document.getElementById('root');
@@ -23,21 +36,16 @@ const store: Store = {
 	feeds: [],
 };
 
-function updateView(html) {
-	if ( container )
-		container.innerHTML = html;
-	else
-		console.log('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
-}
-
-function getData(url) {
+//function getData(url: string): NewsFeed[] | NewsDetail {
+//function getData<T>(url: string): T {
+function getData<AjaxResponse>(url: string): AjaxResponse {
 	ajax.open('GET', url, false);
 	ajax.send();
 
 	return JSON.parse(ajax.response);
 }
 
-function makeFeed(feeds) {
+function makeFeed(feeds: NewsFeed[]): NewsFeed[] {
 
 	feeds.forEach(feed => {
 		feed.read = false;
@@ -46,7 +54,14 @@ function makeFeed(feeds) {
 	return feeds;
 }
 
-function newsFeed() {
+function updateView(html: string): void {
+	if ( container )
+		container.innerHTML = html;
+	else
+		console.log('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
+}
+
+function newsFeed(): void {
 	let newsFeed: NewsFeed[] = store.feeds;
 	const newsList = [];
 	let template = `
@@ -75,7 +90,7 @@ function newsFeed() {
 	`;
 
 	if ( newsFeed.length === 0 ) {
-		newsFeed = store.feeds = makeFeed(getData(NEWS_URL));
+		newsFeed = store.feeds = makeFeed(getData<NewsFeed[]>(NEWS_URL));
 	}
 
 	for ( let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++ ) {
@@ -106,43 +121,43 @@ function newsFeed() {
 		tp = Math.ceil(newsFeed.length/10);
 
 	template = template.replace('{{__news_feed__}}', newsList.join(''));
-	template = template.replace('{{__prev_page__}}', cp > 1 ? cp - 1 : 1);
-	template = template.replace('{{__next_page__}}', cp < tp ? cp + 1 : tp);
+	template = template.replace('{{__prev_page__}}', String(cp > 1 ? cp - 1 : 1));
+	template = template.replace('{{__next_page__}}', String(cp < tp ? cp + 1 : tp));
 
 	updateView(template);
 }
 
-function newsDetail() {
+function newsDetail(): void {
 	const id = location.hash.substr(7);
-	const newsContent = getData(CONTENT_URL.replace('@id', id));
+	const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id));
 	let template = `
-    <div class="bg-gray-600 min-h-screen pb-8">
-      <div class="bg-white text-xl">
-        <div class="mx-auto px-4">
-          <div class="flex justify-between items-center py-6">
-            <div class="flex justify-start">
-              <h1 class="font-extrabold">Hacker News</h1>
-            </div>
-            <div class="items-center justify-end">
-              <a href="#/page/${store.currentPage}" class="text-gray-500">
-                <i class="fa fa-times"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+	<div class="bg-gray-600 min-h-screen pb-8">
+	  <div class="bg-white text-xl">
+		<div class="mx-auto px-4">
+		  <div class="flex justify-between items-center py-6">
+			<div class="flex justify-start">
+			  <h1 class="font-extrabold">Hacker News</h1>
+			</div>
+			<div class="items-center justify-end">
+			  <a href="#/page/${store.currentPage}" class="text-gray-500">
+				<i class="fa fa-times"></i>
+			  </a>
+			</div>
+		  </div>
+		</div>
+	  </div>
 
-      <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-        <h2>${newsContent.title}</h2>
-        <div class="text-gray-400 h-20">
-          ${newsContent.content}
-        </div>
+	  <div class="h-full border rounded-xl bg-white m-6 p-4 ">
+		<h2>${newsContent.title}</h2>
+		<div class="text-gray-400 h-20">
+		  ${newsContent.content}
+		</div>
 
-        {{__comments__}}
-
-      </div>
-    </div>
-  `;
+		{{__comments__}}
+	
+	  </div>
+	</div>
+  	`;
 
 	for ( const feed of store.feeds ) {
 		if ( feed.id === Number(id) ) {
@@ -151,34 +166,36 @@ function newsDetail() {
 		}
 	}
 
-	function makeComment(comments, called = 0) {
-		const commentStr = [];
-
-		for ( let i = 0; i < comments.length; i++ ) {
-			commentStr.push(`
-				<div style="padding-left: ${called * 40}px;" class="mt-4">
-          <div class="text-gray-400">
-            <i class="fa fa-sort-up mr-2"></i>
-            <strong>${comments[i].user}</strong> ${comments[i].time_ago}
-          </div>
-          <p class="text-gray-700">${comments[i].content}</p>
-        </div>
-			`);
-
-			if ( comments[i].comments.length > 0 ) {
-				commentStr.push(makeComment(comments[i].comments, called + 1));
-			}
-		}
-
-		return commentStr.join('');
-	}
-
 	window.scroll(0,0);
 
 	updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
 }
 
-function router() {
+function makeComment(comments: NewsComment[]): string {
+	const commentStr = [];
+
+	for ( let i = 0; i < comments.length; i++ ) {
+		const comment: NewsComment = comments[i];
+
+		commentStr.push(`
+			<div style="padding-left: ${comment.level * 40}px;" class="mt-4">
+			  <div class="text-gray-400">
+				<i class="fa fa-sort-up mr-2"></i>
+				<strong>${comment.user}</strong> ${comment.time_ago}
+			  </div>
+			  <p class="text-gray-700">${comment.content}</p>
+			</div>
+		`);
+
+		if ( comment.comments.length > 0 ) {
+			commentStr.push(makeComment(comment.comments));
+		}
+	}
+
+	return commentStr.join('');
+}
+
+function router(): void {
 	const routePath = location.hash;
 
 	if ( routePath === '' ) {
