@@ -1,30 +1,30 @@
-type Store = {
+interface Store {
 	currentPage: number;
 	feeds: NewsFeed[];
 }
 
-type News = {
-	id: number;
-	time_ago: string;
-	title: string;
-	url: string;
-	user: string;
-	content: string
+interface News {
+	readonly id: number;
+	readonly time_ago: string;
+	readonly title: string;
+	readonly url: string;
+	readonly user: string;
+	readonly content: string
 }
 
-type NewsFeed = News & {
-	comments_count: number;
-	points: number;
+interface NewsFeed  extends News {
+	readonly comments_count: number;
+	readonly points: number;
 	read?: boolean;
 }
 
-type NewsDetail = News & {
-	comments: NewsComment[];
+interface NewsDetail extends News {
+	readonly comments: NewsComment[];
 }
 
-type NewsComment = News & {
-	comments: NewsComment[];
-	level: number;
+interface NewsComment extends News {
+	readonly comments: NewsComment[];
+	readonly level: number;
 }
 
 const container: HTMLElement | null = document.getElementById('root');
@@ -97,20 +97,20 @@ function newsFeed(): void {
 		const news = newsFeed[i];
 
 		newsList.push(`
-	    <div class="p-6 ${newsFeed[i].read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
+	    <div class="p-6 ${news.read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
         <div class="flex">
           <div class="flex-auto">
-            <a href="#/show/${newsFeed[i].id}">${newsFeed[i].title}</a>  
+            <a href="#/show/${news.id}">${news.title}</a>  
           </div>
           <div class="text-center text-sm">
-            <div class="w-10 text-white bg-green-300 rounded-lg px-0 py-2">${newsFeed[i].comments_count}</div>
+            <div class="w-10 text-white bg-green-300 rounded-lg px-0 py-2">${news.comments_count}</div>
           </div>
         </div>
         <div class="flex mt-3">
           <div class="grid grid-cols-3 text-sm text-gray-500">
-            <div><i class="fas fa-user mr-1"></i>${newsFeed[i].user}</div>
-            <div><i class="fas fa-heart mr-1"></i>${newsFeed[i].points}</div>
-            <div><i class="far fa-clock mr-1"></i>${newsFeed[i].time_ago}</div>
+            <div><i class="fas fa-user mr-1"></i>${news.user}</div>
+            <div><i class="fas fa-heart mr-1"></i>${news.points}</div>
+            <div><i class="far fa-clock mr-1"></i>${news.time_ago}</div>
           </div>  
         </div>
       </div> 
