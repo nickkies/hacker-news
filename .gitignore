@@ -1,8 +1,8 @@
 # dependencies
-src/node_modules
+node_modules
 
 .idea
 *.iml
 
-/src/.cache
-/src/dist
+.cache
+dist
