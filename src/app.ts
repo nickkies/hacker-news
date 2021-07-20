@@ -43,7 +43,7 @@ class Api {
 
 		return JSON.parse(ajax.response);
 	}
-};
+}
 
 // mixin!!!
 function applyApiMixins(targetClass: any, baseClasses: any[]): void {
@@ -62,16 +62,16 @@ class NewsFeedApi {
 	getData(): NewsFeed[] {
 		return this.getRequest<NewsFeed[]>(NEWS_URL);
 	}
-};
+}
 
 class NewsDetailApi {
 	getData(id: string): NewsDetail {
 		return this.getRequest<NewsDetail>(CONTENT_URL.replace('@id',id))
 	}
-};
+}
 
-interface NewsFeedApi extends Api {};
-interface NewsDetailApi extends Api {};
+interface NewsFeedApi extends Api {}
+interface NewsDetailApi extends Api {}
 
 applyApiMixins(NewsFeedApi, [Api]);
 applyApiMixins(NewsDetailApi, [Api]);
