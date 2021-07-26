@@ -1,6 +1,6 @@
 import View from "../core/view";
 import { NewsDetailApi } from "../core/api";
-import { NewsComment, NewsStore } from "../types";
+import {NewsComment, NewsDetail, NewsStore} from "../types";
 
 const template = `
   <div class="bg-gray-600 min-h-screen pb-8">
@@ -43,7 +43,9 @@ export default class NewsDetailView extends View {
   render (): void {
     const id = location.hash.substr(7);
     const api = new NewsDetailApi();
-    const { title, content, comments } = api.getData(id);
+
+    api.getData(id, (data: NewsDetail) => {
+    const { title, content, comments } = data;
 
     window.scroll(0,0);
 
@@ -54,6 +56,8 @@ export default class NewsDetailView extends View {
     this.setTemplateData('comments', this.makeComment(comments));
 
     this.updateView();
+
+    })
   }
 
   makeComment(comments: NewsComment[]): string {
